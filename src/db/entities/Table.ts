@@ -9,11 +9,11 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { Restaurant } from "./Restaurant";
-import { Booking } from "./Booking";
+} from 'typeorm';
+import { Restaurant } from './Restaurant';
+import { Booking } from './Booking';
 
-@Entity({ schema: "restautants" })
+@Entity({ schema: 'restaurants' })
 export class Table {
   @PrimaryGeneratedColumn()
   id: number;
@@ -24,17 +24,17 @@ export class Table {
   @Column()
   table_capacity: number;
 
-  @CreateDateColumn({ type: "time with time zone" })
+  @CreateDateColumn({ type: 'time with time zone' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "time with time zone" })
+  @UpdateDateColumn({ type: 'time with time zone' })
   updated_at: Date;
 
-  @DeleteDateColumn({ type: "time with time zone", nullable: true })
+  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
   deleted_at: Date;
 
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.tables)
-  @JoinColumn({ name: "restaurant_id" })
+  @JoinColumn({ name: 'restaurant_id' })
   @Index()
   restautant: Restaurant;
 

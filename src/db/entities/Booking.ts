@@ -4,17 +4,18 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { Table } from "./Table";
-import { User } from "./User";
+} from 'typeorm';
+import { Table } from './Table';
+import { User } from './User';
 
-export type BookingStatus = "confirmed" | "canceled" | "completed";
+export type BookingStatus = 'confirmed' | 'canceled' | 'completed';
 
-@Entity({ schema: "bookings" })
+@Entity({ schema: 'bookings' })
 export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,29 +23,33 @@ export class Booking {
   @Column()
   num_people: number;
 
-  @Column({ type: "timestamp with time zone" })
+  @Column({ type: 'timestamp with time zone' })
   start_time: Date;
 
-  @Column({ type: "timestamp with time zone" })
+  @Column({ type: 'timestamp with time zone' })
   end_time: Date;
 
-  @Column({ type: "enum", enum: ["confirmed", "canceled", "completed"] })
+  @Column({ type: 'enum', enum: ['confirmed', 'canceled', 'completed'] })
   status: BookingStatus;
 
-  @CreateDateColumn({ type: "time with time zone" })
+  @CreateDateColumn({ type: 'time with time zone' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "time with time zone" })
+  @UpdateDateColumn({ type: 'time with time zone' })
   updated_at: Date;
 
-  @DeleteDateColumn({ type: "time with time zone", nullable: true })
+  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
   deleted_at: Date;
 
   @ManyToMany(() => Table, (table) => table.bookings)
-  @JoinColumn({ name: "table_id" })
+  @JoinTable({
+    name: 'booking_tables',
+    joinColumn: { name: 'booking_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'table_id', referencedColumnName: 'id' },
+  })
   tables: Table[];
 
   @ManyToOne(() => User, (user) => user.bookings)
-  @JoinColumn({ name: "client_id" })
+  @JoinColumn({ name: 'client_id' })
   client: User;
 }
