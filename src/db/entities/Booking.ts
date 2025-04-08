@@ -5,13 +5,13 @@ import {
   Entity,
   JoinColumn,
   JoinTable,
-  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Table } from './Table';
 import { User } from './User';
+import { table } from 'console';
 
 export type BookingStatus = 'confirmed' | 'canceled' | 'completed';
 
@@ -41,13 +41,9 @@ export class Booking {
   @DeleteDateColumn({ type: 'time with time zone', nullable: true })
   deleted_at: Date;
 
-  @ManyToMany(() => Table, (table) => table.bookings)
-  @JoinTable({
-    name: 'booking_tables',
-    joinColumn: { name: 'booking_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'table_id', referencedColumnName: 'id' },
-  })
-  tables: Table[];
+  @ManyToOne(() => Table, (table) => table.bookings)
+  @JoinTable({ name: 'table_id' })
+  table: Table;
 
   @ManyToOne(() => User, (user) => user.bookings)
   @JoinColumn({ name: 'client_id' })

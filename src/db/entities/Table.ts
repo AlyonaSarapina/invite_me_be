@@ -5,8 +5,8 @@ import {
   Entity,
   Index,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -38,6 +38,6 @@ export class Table {
   @Index()
   restautant: Restaurant;
 
-  @ManyToMany(() => Booking, (booking) => booking.tables)
+  @OneToMany(() => Booking, (booking) => booking.table)
   bookings: Booking[];
 }
