@@ -11,7 +11,6 @@ import {
 } from 'typeorm';
 import { Table } from './Table';
 import { User } from './User';
-import { table } from 'console';
 
 export type BookingStatus = 'confirmed' | 'canceled' | 'completed';
 
