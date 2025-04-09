@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,6 +6,10 @@ import { Table } from './db/entities/Table';
 import { User } from './db/entities/User';
 import { Restaurant } from './db/entities/Restaurant';
 import { Booking } from './db/entities/Booking';
+import 'dotenv';
+import { configDotenv } from 'dotenv';
+
+configDotenv();
 
 @Module({
   imports: [
