@@ -12,7 +12,11 @@ import {
 import { Table } from './Table';
 import { User } from './User';
 
-export type BookingStatus = 'confirmed' | 'canceled' | 'completed';
+export enum BookingStatus {
+  CONFIRMED = 'confirmed',
+  CANCELED = 'canceled',
+  COMPLETED = 'completed',
+}
 
 @Entity({ schema: 'bookings' })
 export class Booking {
@@ -28,7 +32,7 @@ export class Booking {
   @Column({ type: 'timestamp with time zone' })
   end_time: Date;
 
-  @Column({ type: 'enum', enum: ['confirmed', 'canceled', 'completed'] })
+  @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.CONFIRMED })
   status: BookingStatus;
 
   @CreateDateColumn({ type: 'time with time zone' })
@@ -41,7 +45,7 @@ export class Booking {
   deleted_at: Date;
 
   @ManyToOne(() => Table, (table) => table.bookings)
-  @JoinTable({ name: 'table_id' })
+  @JoinColumn({ name: 'table_id' })
   table: Table;
 
   @ManyToOne(() => User, (user) => user.bookings)

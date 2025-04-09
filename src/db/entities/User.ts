@@ -11,7 +11,10 @@ import {
 import { Restaurant } from './Restaurant';
 import { Booking } from './Booking';
 
-export type UserRoleType = 'client' | 'owner';
+export enum UserRole {
+  CLIENT = 'client',
+  OWNER = 'owner',
+}
 
 @Entity({ schema: 'users' })
 export class User {
@@ -37,8 +40,8 @@ export class User {
   @Column({ nullable: true })
   profile_pic_url: string;
 
-  @Column({ type: 'enum', enum: ['client', 'owner'] })
-  role: UserRoleType;
+  @Column({ type: 'enum', enum: UserRole })
+  role: UserRole;
 
   @CreateDateColumn({ type: 'time with time zone' })
   created_at: Date;
