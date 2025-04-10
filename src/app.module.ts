@@ -9,6 +9,7 @@ import { Booking } from './db/entities/Booking';
 import 'dotenv';
 import { configDotenv } from 'dotenv';
 import { AuthModule } from './modules/auth.module';
+import { RestaurantModule } from './modules/restaurants.module';
 
 configDotenv();
 
@@ -25,6 +26,7 @@ configDotenv();
       synchronize: false,
     }),
     AuthModule,
+    RestaurantModule,
   ],
   controllers: [AppController],
   providers: [AppService],

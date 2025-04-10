@@ -4,6 +4,10 @@ import { AuthService } from '../services/auth.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/db/entities/User';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from 'src/jwt.strategy';
+import { configDotenv } from 'dotenv';
+configDotenv();
 
 @Module({
   imports: [
@@ -14,8 +18,10 @@ import { JwtModule } from '@nestjs/jwt';
         expiresIn: '1d',
       },
     }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
+  exports: [PassportModule, JwtStrategy],
 })
 export class AuthModule {}
