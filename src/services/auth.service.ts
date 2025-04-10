@@ -14,7 +14,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<User> {
     const { name, email, password, phone, role } = registerDto;
 
     const userExists = await this.userRepository.findOne({ where: { email } });
@@ -38,7 +38,7 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
     const { email, password } = loginDto;
 
     const user = await this.userRepository.findOne({ where: { email } });
