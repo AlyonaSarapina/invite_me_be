@@ -5,7 +5,7 @@ import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
 import { User } from 'src/db/entities/User';
 import { InjectRepository } from '@nestjs/typeorm';
 import { configDotenv } from 'dotenv';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { UnauthorizedException } from '@nestjs/common';
 configDotenv();
 
@@ -25,6 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userRepository.findOne({
       where: {
         id: payload.sub,
+        deleted_at: IsNull(),
       },
     });
     if (!user) {

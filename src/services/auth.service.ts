@@ -3,8 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/db/entities/User';
 import { LoginDto, RegisterDto } from 'src/dto/auth.dto';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { userInfo } from 'os';
 
 @Injectable()
 export class AuthService {
@@ -14,10 +15,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<User> {
+  async register(registerDto: RegisterDto): Promise<Omit<User, 'password'>> {
     const { name, email, password, phone, role } = registerDto;
 
-    const userExists = await this.userRepository.findOne({ where: { email } });
+    const userExists = await this.userRepository.findOne({ where: { email, deleted_at: IsNull() } });
     if (userExists) {
       throw new ConflictException('Email is already registered');
     }
@@ -33,15 +34,16 @@ export class AuthService {
     });
 
     await this.userRepository.save(user);
-    user.password = '';
 
-    return user;
+    const { password: _, ...userInfo } = user;
+
+    return userInfo;
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
     const { email, password } = loginDto;
 
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email, deleted_at: IsNull() } });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email');
