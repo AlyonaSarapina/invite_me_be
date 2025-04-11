@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/db/entities/User';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from 'src/jwt.strategy';
+import { JwtStrategy } from 'src/services/jwt.strategy';
 import { configDotenv } from 'dotenv';
 configDotenv();
 
