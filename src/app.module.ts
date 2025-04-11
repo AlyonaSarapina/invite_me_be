@@ -10,6 +10,7 @@ import 'dotenv';
 import { configDotenv } from 'dotenv';
 import { AuthModule } from './modules/auth.module';
 import { RestaurantModule } from './modules/restaurants.module';
+import { UsersModule } from './modules/users.module';
 
 configDotenv();
 
@@ -27,6 +28,7 @@ configDotenv();
     }),
     AuthModule,
     RestaurantModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
