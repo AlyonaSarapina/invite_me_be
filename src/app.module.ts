@@ -6,29 +6,33 @@ import { Table } from './db/entities/Table';
 import { User } from './db/entities/User';
 import { Restaurant } from './db/entities/Restaurant';
 import { Booking } from './db/entities/Booking';
-import 'dotenv';
-import { configDotenv } from 'dotenv';
 import { AuthModule } from './modules/auth.module';
 import { RestaurantModule } from './modules/restaurants.module';
 import { UsersModule } from './modules/users.module';
-
-configDotenv();
+import { TablesModule } from './modules/tables.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigType, appConfigSchema } from './config/config.types';
+import { typeOrmConfig } from './config/database.config';
+import { authConfig } from './config/auth.config';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: 5432,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      entities: [User, Restaurant, Table, Booking],
-      synchronize: false,
+    ConfigModule.forRoot({
+      load: [typeOrmConfig, authConfig],
+      validationSchema: appConfigSchema,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService<ConfigType>) => ({
+        ...configService.get('database'),
+        entities: [User, Restaurant, Table, Booking],
+      }),
     }),
     AuthModule,
     RestaurantModule,
     UsersModule,
+    TablesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

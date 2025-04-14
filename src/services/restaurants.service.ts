@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Restaurant } from 'src/db/entities/Restaurant';
 import { User } from 'src/db/entities/User';
 import { CreateRestaurantDto, UpdateRestaurantDto } from 'src/dto/restaurant.dto';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class RestaurantsService {
@@ -12,14 +12,31 @@ export class RestaurantsService {
     private restaurantRepo: Repository<Restaurant>,
   ) {}
 
-  async getAll() {
-    return this.restaurantRepo.find();
+  async getAll(): Promise<Restaurant[]> {
+    return this.restaurantRepo.find({
+      where: {
+        deleted_at: IsNull(),
+      },
+    });
   }
 
   async getRestaurantsByOwner(ownerId: number): Promise<Restaurant[]> {
     return this.restaurantRepo.find({
       where: {
+        deleted_at: IsNull(),
         owner: { id: ownerId },
+      },
+    });
+  }
+
+  async getRestaurantById(id: number, ownerId: number) {
+    return this.restaurantRepo.findOne({
+      where: {
+        id,
+        deleted_at: IsNull(),
+        owner: {
+          id: ownerId,
+        },
       },
     });
   }
@@ -34,7 +51,7 @@ export class RestaurantsService {
 
   async update(id: number, dto: UpdateRestaurantDto, user: User): Promise<Restaurant> {
     const restaurant = await this.restaurantRepo.findOne({
-      where: { id },
+      where: { id, deleted_at: IsNull() },
       relations: ['owner'],
     });
 
@@ -50,9 +67,9 @@ export class RestaurantsService {
     return await this.restaurantRepo.save(restaurant);
   }
 
-  async delete(id: number, user: User): Promise<void> {
+  async delete(id: number, user: User): Promise<Restaurant> {
     const restaurant = await this.restaurantRepo.findOne({
-      where: { id },
+      where: { id, deleted_at: IsNull() },
       relations: ['owner'],
     });
 
@@ -65,5 +82,7 @@ export class RestaurantsService {
     }
 
     await this.restaurantRepo.softDelete(id);
+
+    return restaurant;
   }
 }

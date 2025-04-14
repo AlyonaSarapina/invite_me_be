@@ -25,6 +25,13 @@ export class RestaurantsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
+  @Get('my/:id')
+  getRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.restaurantsService.getRestaurantById(id, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('owner')
   @Post()
   createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto, @CurrentUser() user: User) {
     return this.restaurantsService.create(createRestaurantDto, user);
