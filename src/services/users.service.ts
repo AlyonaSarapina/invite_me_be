@@ -31,11 +31,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const now = new Date();
-    const timeWithTZ = format(now, 'HH:mm:ssXXX');
-
-    user.deleted_at = timeWithTZ as unknown as Date;
-    await this.userRepo.save(user);
+    await this.userRepo.softDelete(id);
 
     const { password, ...userInfo } = user;
 
