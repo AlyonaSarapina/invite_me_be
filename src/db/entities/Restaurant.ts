@@ -9,11 +9,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from "typeorm";
-import { User } from "./User";
-import { Table } from "./Table";
+} from 'typeorm';
+import { User } from './User';
+import { Table } from './Table';
 
-@Entity({ schema: "restaurants" })
+@Entity({ schema: 'restaurants' })
 export class Restaurant {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,7 +30,7 @@ export class Restaurant {
   @Column({ unique: true })
   email: string;
 
-  @Column({ type: "json" })
+  @Column({ type: 'json' })
   operating_hours: JSON;
 
   @Column()
@@ -54,26 +54,26 @@ export class Restaurant {
   @Column()
   inst_url: string;
 
-  @Column({ type: "decimal", precision: 3, scale: 2 })
+  @Column({ type: 'decimal', precision: 3, scale: 2 })
   rating: number;
 
   @Column()
   is_pet_friedly: boolean;
 
-  @CreateDateColumn({ type: "time with time zone" })
+  @CreateDateColumn({ type: 'time with time zone' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "time with time zone" })
+  @UpdateDateColumn({ type: 'time with time zone' })
   updated_at: Date;
 
-  @DeleteDateColumn({ type: "time with time zone", nullable: true })
+  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
   deleted_at: Date;
 
   @ManyToOne(() => User, (user) => user.restaurants)
-  @JoinColumn({ name: "owner_id" })
+  @JoinColumn({ name: 'owner_id' })
   @Index()
   owner: User;
 
-  @OneToMany(() => Table, (table) => table.restautant)
+  @OneToMany(() => Table, (table) => table.restaurant)
   tables: Table[];
 }

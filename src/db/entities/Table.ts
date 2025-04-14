@@ -36,7 +36,7 @@ export class Table {
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.tables)
   @JoinColumn({ name: 'restaurant_id' })
   @Index()
-  restautant: Restaurant;
+  restaurant: Restaurant;
 
   @OneToMany(() => Booking, (booking) => booking.table)
   bookings: Booking[];
