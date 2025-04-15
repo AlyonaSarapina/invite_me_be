@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { User } from 'src/db/entities/User';
 import { Roles } from 'src/decorators/roles.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
@@ -27,7 +27,7 @@ export class TablesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
-  @Post(':id')
+  @Patch(':id')
   updateTable(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTableDto: UpdateTableDto,
@@ -38,7 +38,7 @@ export class TablesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
-  @Post(':id')
+  @Delete(':id')
   deleteTable(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
     return this.tablesService.delete(id, user);
   }
