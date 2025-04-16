@@ -1,8 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Restaurant } from 'src/db/entities/Restaurant';
-import { Table } from 'src/db/entities/Table';
-import { User } from 'src/db/entities/User';
+import { Restaurant } from 'src/db/entities/restaurant.entity';
+import { Table } from 'src/db/entities/table.entity';
+import { User } from 'src/db/entities/user.entity';
 import { CreateTableDto, UpdateTableDto } from 'src/dto/table.dto';
 import { IsNull, Repository } from 'typeorm';
 
@@ -24,7 +24,7 @@ export class TablesService {
       throw new NotFoundException('Restaurant not found or access denied');
     }
 
-    return this.tableRepo.find({
+    return await this.tableRepo.find({
       where: { restaurant: { id: restaurantId } },
       relations: ['restaurant'],
     });

@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
-import { UserRole } from 'src/db/entities/User';
+import { UserRole } from 'src/db/entities/user.entity';
 
 export class RegisterDto {
   @IsNotEmpty()

@@ -8,8 +8,8 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Restaurant } from './Restaurant';
-import { Booking } from './Booking';
+import { Restaurant } from './restaurant.entity';
+import { Booking } from './booking.entity';
 
 export enum UserRole {
   CLIENT = 'client',

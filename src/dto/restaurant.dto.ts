@@ -45,14 +45,6 @@ export class CreateRestaurantDto {
   @IsString()
   cuisine: string;
 
-  @IsOptional()
-  @IsUrl()
-  logo_url?: string;
-
-  @IsOptional()
-  @IsUrl()
-  menu_url?: string;
-
   @IsNotEmpty()
   @IsPhoneNumber()
   phone: string;

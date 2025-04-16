@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Table } from './db/entities/Table';
-import { User } from './db/entities/User';
-import { Restaurant } from './db/entities/Restaurant';
-import { Booking } from './db/entities/Booking';
+import { Table } from './db/entities/table.entity';
+import { User } from './db/entities/user.entity';
+import { Restaurant } from './db/entities/restaurant.entity';
+import { Booking } from './db/entities/booking.entity';
 import { AuthModule } from './modules/auth.module';
 import { RestaurantModule } from './modules/restaurants.module';
 import { UsersModule } from './modules/users.module';
@@ -14,11 +14,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ConfigType, appConfigSchema } from './config/config.types';
 import { typeOrmConfig } from './config/database.config';
 import { authConfig } from './config/auth.config';
+import { CloudinaryModule } from './modules/cloudinary.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { multerConfig } from './config/multer.config';
+import { cloudinaryConfig } from './config/cloudinary.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [typeOrmConfig, authConfig],
+      load: [typeOrmConfig, authConfig, cloudinaryConfig],
       validationSchema: appConfigSchema,
     }),
     TypeOrmModule.forRootAsync({
@@ -29,10 +33,12 @@ import { authConfig } from './config/auth.config';
         entities: [User, Restaurant, Table, Booking],
       }),
     }),
+    MulterModule.register(multerConfig),
     AuthModule,
     RestaurantModule,
     UsersModule,
     TablesModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

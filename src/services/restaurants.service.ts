@@ -1,19 +1,21 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Restaurant } from 'src/db/entities/Restaurant';
-import { User } from 'src/db/entities/User';
+import { Restaurant } from 'src/db/entities/restaurant.entity';
+import { User } from 'src/db/entities/user.entity';
 import { CreateRestaurantDto, UpdateRestaurantDto } from 'src/dto/restaurant.dto';
 import { IsNull, Repository } from 'typeorm';
+import { CloudinaryService } from './cloudinary.service';
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private restaurantRepo: Repository<Restaurant>,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async getAll(): Promise<Restaurant[]> {
-    return this.restaurantRepo.find({
+    return await this.restaurantRepo.find({
       where: {
         deleted_at: IsNull(),
       },
@@ -21,7 +23,7 @@ export class RestaurantsService {
   }
 
   async getRestaurantsByOwner(ownerId: number): Promise<Restaurant[]> {
-    return this.restaurantRepo.find({
+    return await this.restaurantRepo.find({
       where: {
         deleted_at: IsNull(),
         owner: { id: ownerId },
@@ -29,8 +31,8 @@ export class RestaurantsService {
     });
   }
 
-  async getRestaurantById(id: number, ownerId: number) {
-    return this.restaurantRepo.findOne({
+  async getRestaurantById(id: number, ownerId: number): Promise<Restaurant | null> {
+    return await this.restaurantRepo.findOne({
       where: {
         id,
         deleted_at: IsNull(),
@@ -64,6 +66,37 @@ export class RestaurantsService {
     }
 
     Object.assign(restaurant, dto);
+    return await this.restaurantRepo.save(restaurant);
+  }
+
+  async uploadFile(id: number, file: Express.Multer.File, type: 'logo' | 'menu', user: User): Promise<Restaurant> {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+
+    const restaurant = await this.restaurantRepo.findOne({
+      where: { id, deleted_at: IsNull() },
+      relations: ['owner'],
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+
+    if (restaurant.owner.id !== user.id) {
+      throw new ForbiddenException('You are not allowed to update this restaurant');
+    }
+
+    const result = await this.cloudinaryService.uploadFile(file, 'restaurants');
+
+    if (type === 'logo') {
+      restaurant.logo_url = result.secure_url;
+    } else if (type === 'menu') {
+      restaurant.menu_url = result.secure_url;
+    } else {
+      throw new BadRequestException('Invalid file type');
+    }
+
     return await this.restaurantRepo.save(restaurant);
   }
 

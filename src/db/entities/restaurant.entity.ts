@@ -10,8 +10,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from './User';
-import { Table } from './Table';
+import { User } from './user.entity';
+import { Table } from './table.entity';
 
 @Entity({ schema: 'restaurants' })
 export class Restaurant {

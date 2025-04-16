@@ -9,8 +9,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Table } from './Table';
-import { User } from './User';
+import { Table } from './table.entity';
+import { User } from './user.entity';
 
 export enum BookingStatus {
   CONFIRMED = 'confirmed',

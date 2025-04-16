@@ -19,7 +19,4 @@ export class UpdateUserDto {
 
   @IsOptional()
   date_of_birth: Date;
-
-  @IsOptional()
-  profile_pic_url: string;
 }

@@ -1,57 +1,89 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { RestaurantsService } from 'src/services/restaurants.service';
 import { CreateRestaurantDto, UpdateRestaurantDto } from 'src/dto/restaurant.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
-import { User } from 'src/db/entities/User';
+import { User } from 'src/db/entities/user.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Restaurant } from 'src/db/entities/restaurant.entity';
 
 @Controller('restaurants')
 export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
 
   @Get()
-  getAllRestaurants() {
-    return this.restaurantsService.getAll();
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    return await this.restaurantsService.getAll();
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Get('my')
-  getRestaurants(@CurrentUser() user: User) {
-    return this.restaurantsService.getRestaurantsByOwner(user.id);
+  async getRestaurants(@CurrentUser() user: User): Promise<Restaurant[]> {
+    return await this.restaurantsService.getRestaurantsByOwner(user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Get('my/:id')
-  getRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.restaurantsService.getRestaurantById(id, user.id);
+  async getRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant | null> {
+    return await this.restaurantsService.getRestaurantById(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Post()
-  createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto, @CurrentUser() user: User) {
-    return this.restaurantsService.create(createRestaurantDto, user);
+  async createRestaurant(
+    @Body() createRestaurantDto: CreateRestaurantDto,
+    @CurrentUser() user: User,
+  ): Promise<Restaurant> {
+    return await this.restaurantsService.create(createRestaurantDto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Patch(':id')
-  updateRestaurant(
+  async updateRestaurant(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRestaurantDto: UpdateRestaurantDto,
     @CurrentUser() user: User,
-  ) {
+  ): Promise<Restaurant> {
     return this.restaurantsService.update(id, updateRestaurantDto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
+  @Patch(':id/file')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadRestaurantFile(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Query('type') type: 'logo' | 'menu',
+    @CurrentUser() user: User,
+  ): Promise<Restaurant> {
+    return await this.restaurantsService.uploadFile(id, file, type, user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('owner')
   @Delete(':id')
-  deleteRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.restaurantsService.delete(id, user);
+  async deleteRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant> {
+    return await this.restaurantsService.delete(id, user);
   }
 }

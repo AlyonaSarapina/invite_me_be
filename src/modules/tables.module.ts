@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Table } from 'src/db/entities/Table';
-import { Restaurant } from 'src/db/entities/Restaurant';
+import { Table } from 'src/db/entities/table.entity';
+import { Restaurant } from 'src/db/entities/restaurant.entity';
 import { TablesService } from 'src/services/tables.service';
 import { TablesController } from 'src/controllers/tables.controller';
 
