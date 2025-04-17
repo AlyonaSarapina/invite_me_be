@@ -22,14 +22,15 @@ import { CurrentUser } from 'src/decorators/user.decorator';
 import { User } from 'src/db/entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Restaurant } from 'src/db/entities/restaurant.entity';
+import { GetRestaurantsQueryDto } from 'src/dto/getRestaurantQuery.dto';
 
 @Controller('restaurants')
 export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
 
   @Get()
-  async getAllRestaurants(): Promise<Restaurant[]> {
-    return await this.restaurantsService.getAll();
+  async getAllRestaurants(@Query() getRestaurantQueryDto: GetRestaurantsQueryDto): Promise<[Restaurant[], number]> {
+    return await this.restaurantsService.getAll(getRestaurantQueryDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

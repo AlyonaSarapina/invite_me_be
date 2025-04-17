@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryConfig } from 'src/config/cloudinary.config';
 import * as toStream from 'buffer-to-stream';
+import { extractPublicId } from 'cloudinary-build-url';
 
 @Injectable()
 export class CloudinaryService {
@@ -26,6 +27,10 @@ export class CloudinaryService {
 
       toStream(file.buffer).pipe(stream);
     });
+  }
+
+  extractPublicId(publidId: string) {
+    return extractPublicId(publidId);
   }
 
   async deleteFile(publicId: string): Promise<void> {

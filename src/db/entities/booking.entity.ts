@@ -26,22 +26,22 @@ export class Booking {
   @Column()
   num_people: number;
 
-  @Column({ type: 'timestamp with time zone' })
+  @Column({ type: 'timestamp' })
   start_time: Date;
 
-  @Column({ type: 'timestamp with time zone' })
+  @Column({ type: 'timestamp' })
   end_time: Date;
 
   @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.CONFIRMED })
   status: BookingStatus;
 
-  @CreateDateColumn({ type: 'time with time zone' })
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'time with time zone' })
+  @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
+  @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
   @ManyToOne(() => Table, (table) => table.bookings)

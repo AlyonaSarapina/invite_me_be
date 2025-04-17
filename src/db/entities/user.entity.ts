@@ -43,13 +43,13 @@ export class User {
   @Column({ type: 'enum', enum: UserRole })
   role: UserRole;
 
-  @CreateDateColumn({ type: 'time with time zone' })
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'time with time zone' })
+  @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
+  @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)

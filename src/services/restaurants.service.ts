@@ -3,8 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Restaurant } from 'src/db/entities/restaurant.entity';
 import { User } from 'src/db/entities/user.entity';
 import { CreateRestaurantDto, UpdateRestaurantDto } from 'src/dto/restaurant.dto';
-import { IsNull, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, IsNull, MoreThanOrEqual, Repository } from 'typeorm';
 import { CloudinaryService } from './cloudinary.service';
+import { GetRestaurantsQueryDto } from 'src/dto/getRestaurantQuery.dto';
 
 @Injectable()
 export class RestaurantsService {
@@ -14,11 +15,33 @@ export class RestaurantsService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  async getAll(): Promise<Restaurant[]> {
-    return await this.restaurantRepo.find({
-      where: {
-        deleted_at: IsNull(),
-      },
+  async getAll(getRestaurantQueryDto: GetRestaurantsQueryDto): Promise<[Restaurant[], number]> {
+    const { limit = 10, offset = 0, name, min_rating, cuisine, is_pet_friedly } = getRestaurantQueryDto;
+
+    const where: FindOptionsWhere<Restaurant> = {
+      deleted_at: IsNull(),
+    };
+
+    if (min_rating !== undefined) {
+      where.rating = MoreThanOrEqual(min_rating);
+    }
+
+    if (cuisine) {
+      where.cuisine = ILike(cuisine);
+    }
+
+    if (is_pet_friedly) {
+      where.is_pet_friedly = is_pet_friedly;
+    }
+
+    if (name) {
+      where.name = ILike(`%${name}%`);
+    }
+
+    return await this.restaurantRepo.findAndCount({
+      where,
+      skip: offset,
+      take: limit,
     });
   }
 
@@ -32,7 +55,7 @@ export class RestaurantsService {
   }
 
   async getRestaurantById(id: number, ownerId: number): Promise<Restaurant | null> {
-    return await this.restaurantRepo.findOne({
+    return await this.restaurantRepo.findOneOrFail({
       where: {
         id,
         deleted_at: IsNull(),
@@ -87,12 +110,18 @@ export class RestaurantsService {
       throw new ForbiddenException('You are not allowed to update this restaurant');
     }
 
-    const result = await this.cloudinaryService.uploadFile(file, 'restaurants');
+    let publicId: string;
+
+    const result = await this.cloudinaryService.uploadFile(file, `${type}s`);
 
     if (type === 'logo') {
+      publicId = this.cloudinaryService.extractPublicId(restaurant.logo_url);
+      await this.cloudinaryService.deleteFile(publicId);
       restaurant.logo_url = result.secure_url;
     } else if (type === 'menu') {
+      publicId = this.cloudinaryService.extractPublicId(restaurant.menu_url);
       restaurant.menu_url = result.secure_url;
+      await this.cloudinaryService.deleteFile(restaurant.menu_url);
     } else {
       throw new BadRequestException('Invalid file type');
     }

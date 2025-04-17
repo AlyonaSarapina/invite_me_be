@@ -30,6 +30,10 @@ export class UsersService {
       throw new BadRequestException('File is required');
     }
 
+    const publicId = this.cloudinaryService.extractPublicId(user.profile_pic_url);
+
+    await this.cloudinaryService.deleteFile(publicId);
+
     const result = await this.cloudinaryService.uploadFile(file, 'users');
 
     user.profile_pic_url = result.secure_url;

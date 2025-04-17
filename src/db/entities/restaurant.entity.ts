@@ -60,13 +60,13 @@ export class Restaurant {
   @Column()
   is_pet_friedly: boolean;
 
-  @CreateDateColumn({ type: 'time with time zone' })
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'time with time zone' })
+  @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
+  @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
   @ManyToOne(() => User, (user) => user.restaurants)
