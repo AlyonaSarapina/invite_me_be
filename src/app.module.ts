@@ -18,6 +18,7 @@ import { CloudinaryModule } from './modules/cloudinary.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { multerConfig } from './config/multer.config';
 import { cloudinaryConfig } from './config/cloudinary.config';
+import { BookingsModule } from './modules/bookings.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { cloudinaryConfig } from './config/cloudinary.config';
     UsersModule,
     TablesModule,
     CloudinaryModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
