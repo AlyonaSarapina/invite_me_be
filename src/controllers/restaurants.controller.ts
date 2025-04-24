@@ -30,21 +30,21 @@ export class RestaurantsController {
 
   @Get()
   async getAllRestaurants(@Query() getRestaurantQueryDto: GetRestaurantsQueryDto): Promise<[Restaurant[], number]> {
-    return await this.restaurantsService.getAll(getRestaurantQueryDto);
+    return this.restaurantsService.getAll(getRestaurantQueryDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Get('my')
   async getRestaurants(@CurrentUser() user: User): Promise<Restaurant[]> {
-    return await this.restaurantsService.getRestaurantsByOwner(user.id);
+    return this.restaurantsService.getRestaurantsByOwner(user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Get('my/:id')
   async getRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant | null> {
-    return await this.restaurantsService.getRestaurantById(id, user.id);
+    return this.restaurantsService.getRestaurantById(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -54,7 +54,7 @@ export class RestaurantsController {
     @Body() createRestaurantDto: CreateRestaurantDto,
     @CurrentUser() user: User,
   ): Promise<Restaurant> {
-    return await this.restaurantsService.create(createRestaurantDto, user);
+    return this.restaurantsService.create(createRestaurantDto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -78,13 +78,13 @@ export class RestaurantsController {
     @Query('type') type: 'logo' | 'menu',
     @CurrentUser() user: User,
   ): Promise<Restaurant> {
-    return await this.restaurantsService.uploadFile(id, file, type, user);
+    return this.restaurantsService.uploadFile(id, file, type, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Delete(':id')
   async deleteRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant> {
-    return await this.restaurantsService.delete(id, user);
+    return this.restaurantsService.delete(id, user);
   }
 }

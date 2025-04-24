@@ -143,7 +143,7 @@ export class RestaurantsService {
       throw new ForbiddenException('You are not allowed to delete this restaurant');
     }
 
-    await this.restaurantRepo.softDelete(id);
+    await this.restaurantRepo.softRemove(restaurant);
 
     return restaurant;
   }

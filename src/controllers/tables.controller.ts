@@ -19,14 +19,14 @@ export class TablesController {
     @Param('restaurantId', ParseIntPipe) restaurantId: number,
     @CurrentUser() user: User,
   ): Promise<Table[]> {
-    return await this.tablesService.getTablesByRestaurant(restaurantId, user.id);
+    return this.tablesService.getTablesByRestaurant(restaurantId, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Post()
   async createTable(@Body() createTableDto: CreateTableDto, @CurrentUser() user: User): Promise<Table> {
-    return await this.tablesService.create(createTableDto, user);
+    return this.tablesService.create(createTableDto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -37,13 +37,13 @@ export class TablesController {
     @Body() updateTableDto: UpdateTableDto,
     @CurrentUser() user: User,
   ): Promise<Table> {
-    return await this.tablesService.update(id, updateTableDto, user);
+    return this.tablesService.update(id, updateTableDto, user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Delete(':id')
   async deleteTable(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Table> {
-    return await this.tablesService.delete(id, user);
+    return this.tablesService.delete(id, user);
   }
 }

@@ -26,10 +26,10 @@ export class Booking {
   @Column()
   num_people: number;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   start_time: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   end_time: Date;
 
   @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.CONFIRMED })

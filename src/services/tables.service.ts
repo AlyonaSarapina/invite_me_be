@@ -107,7 +107,7 @@ export class TablesService {
       throw new ForbiddenException('You are not allowed to delete this table');
     }
 
-    await this.tableRepo.softDelete(id);
+    await this.tableRepo.softRemove(table);
     return table;
   }
 }

@@ -19,7 +19,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   async updateMe(@CurrentUser() user: User, @Body() updates: UpdateUserDto): Promise<Omit<User, 'password'>> {
-    return await this.userService.updateUser(user.id, updates);
+    return this.userService.updateUser(user.id, updates);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -29,12 +29,12 @@ export class UsersController {
     @CurrentUser() user: User,
     @UploadedFile() file: Express.Multer.File,
   ): Promise<Omit<User, 'password'>> {
-    return await this.userService.uploadFile(user, file);
+    return this.userService.uploadFile(user, file);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('me')
   async deleteMe(@CurrentUser() user: User): Promise<Omit<User, 'password'>> {
-    return await this.userService.removeUser(user.id);
+    return this.userService.removeUser(user.id);
   }
 }

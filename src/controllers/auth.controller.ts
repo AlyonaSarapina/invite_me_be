@@ -9,11 +9,11 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto): Promise<Omit<User, 'password'>> {
-    return await this.authService.register(registerDto);
+    return this.authService.register(registerDto);
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto): Promise<{ accessToken: string }> {
-    return await this.authService.login(loginDto);
+    return this.authService.login(loginDto);
   }
 }

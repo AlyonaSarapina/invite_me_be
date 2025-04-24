@@ -58,7 +58,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    await this.userRepo.softDelete(id);
+    await this.userRepo.softRemove(user);
 
     const { password, ...userInfo } = user;
 
