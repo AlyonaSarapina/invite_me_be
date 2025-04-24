@@ -33,7 +33,7 @@ export class BookingsController {
     @Param('id') id: number,
     @Body() updateBookingStatusDto: UpdateBookingStatusDto,
     @CurrentUser() user: User,
-  ) {
+  ): Promise<Booking> {
     return this.bookingsService.updateBooking(id, updateBookingStatusDto, user);
   }
 
