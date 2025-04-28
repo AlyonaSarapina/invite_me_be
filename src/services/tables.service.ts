@@ -1,62 +1,51 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Restaurant } from 'src/db/entities/restaurant.entity';
+
 import { Table } from 'src/db/entities/table.entity';
 import { User } from 'src/db/entities/user.entity';
-import { CreateTableDto, UpdateTableDto } from 'src/dto/table.dto';
+import { CreateTableDto } from 'src/dto/createTable.dto';
 import { IsNull, Repository } from 'typeorm';
+import { RestaurantsService } from './restaurants.service';
+import { throwBadRequest, throwForbidden, throwNotFound } from 'src/utils/exceprions.utils';
+import { UpdateTableDto } from 'src/dto/updateTable.dto';
 
 @Injectable()
 export class TablesService {
   constructor(
     @InjectRepository(Table)
     private tableRepo: Repository<Table>,
-    @InjectRepository(Restaurant)
-    private readonly restaurantRepo: Repository<Restaurant>,
+    private restaurantService: RestaurantsService,
   ) {}
 
-  async getTablesByRestaurant(restaurantId: number, ownerId: number): Promise<Table[]> {
-    const restaurant = await this.restaurantRepo.findOne({
-      where: { id: restaurantId, deleted_at: IsNull(), owner: { id: ownerId } },
+  async getTableById(tableId: number): Promise<Table> {
+    const table = await this.tableRepo.findOne({
+      where: { id: tableId, deleted_at: IsNull() },
+      relations: ['restaurant.owner'],
     });
 
-    if (!restaurant) {
-      throw new NotFoundException('Restaurant not found or access denied');
-    }
+    if (!table) throwNotFound('Table');
 
-    return await this.tableRepo.find({
-      where: { restaurant: { id: restaurantId } },
-      relations: ['restaurant'],
-    });
+    return table;
   }
 
-  async create(dto: CreateTableDto, owner: User): Promise<Table> {
-    const restaurant = await this.restaurantRepo.findOne({
-      where: {
-        id: dto.restaurant_id,
-        deleted_at: IsNull(),
-        owner: {
-          id: owner.id,
-        },
-      },
-      relations: ['tables'],
-    });
-
-    if (!restaurant || restaurant.owner.id !== owner.id) {
-      throw new NotFoundException('Restaurant not found or access denied');
-    }
-
-    const currentTableCount = await this.tableRepo.find({
+  async getTablesByRestaurant(restaurantId: number): Promise<Table[]> {
+    return await this.tableRepo.find({
       where: {
         restaurant: {
-          id: restaurant.id,
+          id: restaurantId,
           deleted_at: IsNull(),
         },
       },
     });
+  }
+
+  async create(dto: CreateTableDto, owner: User): Promise<Table> {
+    const restaurant = await this.restaurantService.getOneOwnedRestaurant(dto.restaurant_id, owner.id);
+
+    const currentTableCount = await this.getTablesByRestaurant(restaurant.id);
 
     if (currentTableCount.length >= restaurant.tables_capacity) {
-      throw new BadRequestException(
+      throwBadRequest(
         `This restaurant already has the maximum allowed number of tables (${restaurant.tables_capacity}). To add a table please remove one of the existing tables first`,
       );
     }
@@ -69,45 +58,27 @@ export class TablesService {
     return await this.tableRepo.save(table);
   }
 
-  async update(id: number, dto: UpdateTableDto, owner: User): Promise<Table> {
-    const table = await this.tableRepo.findOne({
-      where: {
-        id,
-        deleted_at: IsNull(),
-      },
-      relations: ['restaurant.owner'],
-    });
+  async update(tableId: number, dto: UpdateTableDto, owner: User): Promise<Table> {
+    const table = await this.getTableById(tableId);
 
-    if (!table) {
-      throw new NotFoundException('Table not found');
-    }
-
-    if (table.restaurant.owner.id !== owner.id) {
-      throw new ForbiddenException('You are not allowed to update this table');
-    }
+    this.ensureOwnerAccess(table, owner.id);
 
     Object.assign(table, dto);
     return await this.tableRepo.save(table);
   }
 
-  async delete(id: number, owner: User): Promise<Table> {
-    const table = await this.tableRepo.findOne({
-      where: {
-        id,
-        deleted_at: IsNull(),
-      },
-      relations: ['restaurant.owner'],
-    });
+  async delete(tableId: number, owner: User): Promise<Table> {
+    const table = await this.getTableById(tableId);
 
-    if (!table) {
-      throw new NotFoundException('Table not found');
-    }
-
-    if (table.restaurant.owner.id !== owner.id) {
-      throw new ForbiddenException('You are not allowed to delete this table');
-    }
+    this.ensureOwnerAccess(table, owner.id);
 
     await this.tableRepo.softRemove(table);
     return table;
+  }
+
+  private ensureOwnerAccess(table: Table, ownerId: number): void {
+    if (table.restaurant.owner.id !== ownerId) {
+      throwForbidden('You are not allowed to perform this action on this table');
+    }
   }
 }

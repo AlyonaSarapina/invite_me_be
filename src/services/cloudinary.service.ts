@@ -29,11 +29,12 @@ export class CloudinaryService {
     });
   }
 
-  extractPublicId(publidId: string) {
-    return extractPublicId(publidId);
+  async deleteFile(url: string): Promise<void> {
+    const publicId = extractPublicId(url);
+    await cloudinary.uploader.destroy(publicId);
   }
 
-  async deleteFile(publicId: string): Promise<void> {
-    await cloudinary.uploader.destroy(publicId);
+  private extractPublicId(url: string) {
+    return extractPublicId(url);
   }
 }

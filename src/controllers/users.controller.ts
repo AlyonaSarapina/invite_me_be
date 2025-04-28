@@ -3,7 +3,7 @@ import { UsersService } from '../services/users.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { User } from 'src/db/entities/user.entity';
-import { UpdateUserDto } from 'src/dto/user.dto';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')

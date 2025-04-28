@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { Booking } from 'src/db/entities/booking.entity';
 import { User } from 'src/db/entities/user.entity';
-import { Roles } from 'src/decorators/roles.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
-import { CreateBookingDto, UpdateBookingStatusDto } from 'src/dto/booking.dto';
+import { CreateBookingDto } from 'src/dto/createBooking.dto';
+import { UpdateBookingStatusDto } from 'src/dto/updateBooking.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { BookingsService } from 'src/services/bookings.service';
 

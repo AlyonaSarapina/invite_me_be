@@ -1,5 +1,4 @@
 import { IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
-import { PartialType } from '@nestjs/swagger';
 
 export class CreateTableDto {
   @IsNotEmpty()
@@ -17,5 +16,3 @@ export class CreateTableDto {
   @IsPositive()
   restaurant_id: number;
 }
-
-export class UpdateTableDto extends PartialType(CreateTableDto) {}

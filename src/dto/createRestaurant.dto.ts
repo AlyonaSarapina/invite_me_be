@@ -1,17 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsEmail,
-  IsPhoneNumber,
-  IsOptional,
-  IsUrl,
-  IsJSON,
-  IsNumber,
-  IsBoolean,
-  Min,
-  Max,
-} from 'class-validator';
-import { PartialType } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsEmail, IsPhoneNumber, IsUrl, IsNumber, IsBoolean, Min, Max } from 'class-validator';
 
 export class CreateRestaurantDto {
   @IsNotEmpty()
@@ -63,5 +50,3 @@ export class CreateRestaurantDto {
   @IsBoolean()
   is_pet_friedly: boolean;
 }
-
-export class UpdateRestaurantDto extends PartialType(CreateRestaurantDto) {}

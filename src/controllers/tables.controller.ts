@@ -3,7 +3,8 @@ import { Table } from 'src/db/entities/table.entity';
 import { User } from 'src/db/entities/user.entity';
 import { Roles } from 'src/decorators/roles.decorator';
 import { CurrentUser } from 'src/decorators/user.decorator';
-import { CreateTableDto, UpdateTableDto } from 'src/dto/table.dto';
+import { CreateTableDto } from 'src/dto/createTable.dto';
+import { UpdateTableDto } from 'src/dto/updateTable.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { TablesService } from 'src/services/tables.service';
@@ -14,12 +15,9 @@ export class TablesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
-  @Get('restaurant/:restaurantId')
-  async getTablesByRestaurant(
-    @Param('restaurantId', ParseIntPipe) restaurantId: number,
-    @CurrentUser() user: User,
-  ): Promise<Table[]> {
-    return this.tablesService.getTablesByRestaurant(restaurantId, user.id);
+  @Get(':id')
+  async getTablesByRestaurant(@Param('id', ParseIntPipe) id: number): Promise<Table> {
+    return this.tablesService.getTableById(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

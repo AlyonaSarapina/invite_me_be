@@ -14,7 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { RestaurantsService } from 'src/services/restaurants.service';
-import { CreateRestaurantDto, UpdateRestaurantDto } from 'src/dto/restaurant.dto';
+import { CreateRestaurantDto } from 'src/dto/createRestaurant.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -23,6 +23,7 @@ import { User } from 'src/db/entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Restaurant } from 'src/db/entities/restaurant.entity';
 import { GetRestaurantsQueryDto } from 'src/dto/getRestaurantQuery.dto';
+import { UpdateRestaurantDto } from 'src/dto/updateRestaurant.dto';
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -37,14 +38,27 @@ export class RestaurantsController {
   @Roles('owner')
   @Get('my')
   async getRestaurants(@CurrentUser() user: User): Promise<Restaurant[]> {
-    return this.restaurantsService.getRestaurantsByOwner(user.id);
+    return this.restaurantsService.getOwnedRestaurants(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('client')
+  @Get(':id')
+  async getRestaurantById(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ): Promise<Restaurant | null> {
+    return this.restaurantsService.getRestaurantById(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('owner')
   @Get('my/:id')
-  async getRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant | null> {
-    return this.restaurantsService.getRestaurantById(id, user.id);
+  async getOwnedRestaurant(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ): Promise<Restaurant | null> {
+    return this.restaurantsService.getOneOwnedRestaurant(id, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -85,6 +99,6 @@ export class RestaurantsController {
   @Roles('owner')
   @Delete(':id')
   async deleteRestaurant(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Restaurant> {
-    return this.restaurantsService.delete(id, user);
+    return await this.restaurantsService.delete(id, user);
   }
 }

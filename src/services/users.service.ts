@@ -1,8 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/db/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CloudinaryService } from './cloudinary.service';
+import { throwBadRequest, throwNotFound } from 'src/utils/exceprions.utils';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
 
 @Injectable()
 export class UsersService {
@@ -12,27 +14,31 @@ export class UsersService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  async updateUser(id: number, updates: Partial<User>): Promise<Omit<User, 'password'>> {
+  async getUserByPhone(phone: string) {
+    const user = await this.userRepo.findOne({
+      where: { phone },
+      withDeleted: false,
+    });
+
+    if (!user) throwNotFound('User');
+
+    return user;
+  }
+
+  async updateUser(id: number, updates: UpdateUserDto): Promise<Omit<User, 'password'>> {
     await this.userRepo.update(id, updates);
+
     const updatedUser = await this.userRepo.findOneBy({ id });
 
-    if (!updatedUser) {
-      throw new NotFoundException('User not found');
-    }
+    if (!updatedUser) throwNotFound('User');
 
-    const { password, ...userInfo } = updatedUser;
-
-    return userInfo;
+    return this.excludePassword(updatedUser);
   }
 
   async uploadFile(user: User, file: Express.Multer.File): Promise<Omit<User, 'password'>> {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
+    if (!file) throwBadRequest('File is required');
 
-    const publicId = this.cloudinaryService.extractPublicId(user.profile_pic_url);
-
-    await this.cloudinaryService.deleteFile(publicId);
+    await this.cloudinaryService.deleteFile(user.profile_pic_url);
 
     const result = await this.cloudinaryService.uploadFile(file, 'users');
 
@@ -42,24 +48,22 @@ export class UsersService {
 
     const updatedUser = await this.userRepo.findOneBy({ id: user.id });
 
-    if (!updatedUser) {
-      throw new NotFoundException('User not found');
-    }
+    if (!updatedUser) throwNotFound('User');
 
-    const { password, ...userInfo } = updatedUser;
-
-    return userInfo;
+    return this.excludePassword(updatedUser);
   }
 
   async removeUser(id: number): Promise<Omit<User, 'password'>> {
     const user = await this.userRepo.findOneBy({ id });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throwNotFound('User');
 
     await this.userRepo.softRemove(user);
 
+    return this.excludePassword(user);
+  }
+
+  private excludePassword(user: User): Omit<User, 'password'> {
     const { password, ...userInfo } = user;
 
     return userInfo;

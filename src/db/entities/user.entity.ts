@@ -10,11 +10,7 @@ import {
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 import { Booking } from './booking.entity';
-
-export enum UserRole {
-  CLIENT = 'client',
-  OWNER = 'owner',
-}
+import { UserRole } from 'src/enums/userRole.enum';
 
 @Entity({ schema: 'users' })
 export class User {

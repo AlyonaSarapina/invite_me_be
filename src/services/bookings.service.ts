@@ -1,11 +1,18 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Booking, BookingStatus } from 'src/db/entities/booking.entity';
+import { Booking } from 'src/db/entities/booking.entity';
 import { Restaurant } from 'src/db/entities/restaurant.entity';
 import { Table } from 'src/db/entities/table.entity';
 import { User } from 'src/db/entities/user.entity';
-import { CreateBookingDto, UpdateBookingStatusDto } from 'src/dto/booking.dto';
-import { In, IsNull, LessThan, MoreThan, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { CreateBookingDto } from 'src/dto/createBooking.dto';
+import { In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
+import { TablesService } from './tables.service';
+import { RestaurantsService } from './restaurants.service';
+import { throwForbidden, throwNotFound } from 'src/utils/exceprions.utils';
+import { UsersService } from './users.service';
+import { UserRole } from 'src/enums/userRole.enum';
+import { BookingStatus } from 'src/enums/bookingStatus.enum';
+import { UpdateBookingStatusDto } from 'src/dto/updateBooking.dto';
 
 @Injectable()
 export class BookingsService {
@@ -13,26 +20,21 @@ export class BookingsService {
     @InjectRepository(Booking)
     private bookingRepo: Repository<Booking>,
 
-    @InjectRepository(Restaurant)
-    private restaurantRepo: Repository<Restaurant>,
-
-    @InjectRepository(Table)
-    private tableRepo: Repository<Table>,
+    private readonly userService: UsersService,
+    private readonly restaurantService: RestaurantsService,
+    private readonly tableService: TablesService,
   ) {}
 
   async getAllBookings(user: User): Promise<Booking[]> {
-    if (user.role === 'client') {
+    if (user.role === UserRole.CLIENT) {
       return this.bookingRepo.find({
         where: { client: { id: user.id }, deleted_at: IsNull() },
         relations: ['table', 'client'],
       });
     }
 
-    if (user.role === 'owner') {
-      const ownerRestaurants = await this.restaurantRepo.find({
-        where: { owner: { id: user.id }, deleted_at: IsNull() },
-        relations: ['tables'],
-      });
+    if (user.role === UserRole.OWNER) {
+      const ownerRestaurants = await this.restaurantService.getOwnedRestaurants(user.id);
 
       const tableIds = ownerRestaurants
         .flatMap((restaurant: Restaurant) => restaurant.tables)
@@ -49,39 +51,39 @@ export class BookingsService {
       });
     }
 
-    throw new ForbiddenException('Invalid role');
+    throwForbidden('Invalid role');
   }
 
   async createBooking(restaurantId: number, createBookingDto: CreateBookingDto, user: User): Promise<Booking> {
-    const { num_people, start_time, end_time } = createBookingDto;
+    const { num_people, start_time, end_time, clientPhoneNumber } = createBookingDto;
     const start_date = new Date(start_time);
     const end_date = new Date(end_time);
+    const isOwner = user.role === UserRole.OWNER;
 
-    const restaurant = await this.restaurantRepo.findOne({
-      where: { id: restaurantId, deleted_at: IsNull() },
-      relations: ['owner'],
-    });
-
-    if (!restaurant) {
-      throw new NotFoundException('Restaurant not found');
+    if (isOwner && !clientPhoneNumber) {
+      throw new ConflictException(
+        'You need to provide the client contact information (phone number) to create the booking',
+      );
     }
 
-    if (user.role === 'owner' && restaurant.owner.id !== user.id) {
-      throw new ForbiddenException('You cannot book for a restaurant you do not own');
-    }
+    const client = isOwner ? await this.userService.getUserByPhone(clientPhoneNumber) : user;
+
+    if (!client) throwNotFound('Client');
+
+    const restaurant = await this.restaurantService.getRestaurantById(restaurantId);
+
+    if (isOwner && restaurant.owner.id !== user.id) throwForbidden('You cannot book for a restaurant you do not own');
 
     const table = await this.findAvailableTable(restaurantId, start_date, end_date, num_people);
 
-    if (!table) {
-      throw new NotFoundException('No free table at the selected time');
-    }
+    if (!table) throwNotFound('No free table at the selected time');
 
     const booking = this.bookingRepo.create({
       num_people,
       start_time,
       end_time,
       status: BookingStatus.CONFIRMED,
-      client: user,
+      client: client,
       table,
     });
 
@@ -94,38 +96,30 @@ export class BookingsService {
     endTime: Date,
     numPeople: number,
     excludeBookingId?: number,
-  ): Promise<Table> {
-    const tables = await this.tableRepo.find({
-      where: {
-        restaurant: { id: restaurantId },
-        table_capacity: MoreThanOrEqual(numPeople),
-        deleted_at: IsNull(),
-      },
-      relations: ['bookings'],
-      order: { table_capacity: 'ASC' },
-    });
+  ): Promise<Table | null> {
+    const tables = await this.tableService.getTablesByRestaurant(restaurantId);
 
-    const bookingPromises = tables.map((table) => {
-      return this.bookingRepo.find({
-        where: {
-          table: { id: table.id },
-          status: BookingStatus.CONFIRMED,
-          start_time: LessThan(endTime),
-          end_time: MoreThan(startTime),
-          ...(excludeBookingId && { id: Not(excludeBookingId) }),
-        },
-      });
-    });
+    const suitableTables = tables.filter((table) => table.table_capacity >= numPeople);
 
-    const bookingResults = await Promise.all(bookingPromises);
+    if (!suitableTables.length) return null;
 
-    const availableTable = tables.find((_, index) => bookingResults[index].length === 0);
+    const bookingConflicts = await Promise.all(
+      suitableTables.map((table) => {
+        return this.bookingRepo.find({
+          where: {
+            table: { id: table.id },
+            status: BookingStatus.CONFIRMED,
+            start_time: LessThan(endTime),
+            end_time: MoreThan(startTime),
+            ...(excludeBookingId && { id: Not(excludeBookingId) }),
+          },
+        });
+      }),
+    );
 
-    if (!availableTable) {
-      throw new NotFoundException('No free table at the selected time');
-    }
+    const availableTable = tables.find((_, index) => bookingConflicts[index].length === 0);
 
-    return availableTable;
+    return availableTable ?? null;
   }
 
   async updateBooking(id: number, updateBookingStatusDto: UpdateBookingStatusDto, user: User): Promise<Booking> {
@@ -134,26 +128,18 @@ export class BookingsService {
       relations: ['table', 'client', 'table.restaurant', 'table.restaurant.owner'],
     });
 
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
-    }
+    if (!booking) throwNotFound('Booking');
 
-    if (user.role === 'client' && booking.client.id !== user.id) {
-      throw new ForbiddenException('You can only update your own bookings');
-    }
-
-    if (user.role === 'owner' && booking.table.restaurant.owner.id !== user.id) {
-      throw new ForbiddenException('You can only update bookings in your own restaurants');
-    }
+    this.ensureBookingAccess(booking, user);
 
     const { num_people, start_time, end_time, status } = updateBookingStatusDto;
 
-    const isTimeUpdated = start_time && end_time;
-    const isPeopleUpdated = num_people && num_people !== booking.num_people;
-
-    if (status !== undefined) {
+    if (status) {
       booking.status = status;
     }
+
+    const isTimeUpdated = start_time && end_time;
+    const isPeopleUpdated = num_people && num_people !== booking.num_people;
 
     if (isTimeUpdated || isPeopleUpdated) {
       const new_start_time = start_time ? new Date(start_time) : booking.start_time;
@@ -188,20 +174,26 @@ export class BookingsService {
       relations: ['client'],
     });
 
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
-    }
+    if (!booking) throwNotFound('Booking');
 
-    if (booking.client.id !== user.id) {
-      throw new ForbiddenException('You are not allowed to cancel this booking');
-    }
+    if (booking.client.id !== user.id) throwForbidden('You are not allowed to cancel this booking');
 
     booking.status = BookingStatus.CANCELED;
 
-    const deletedBooking = await this.bookingRepo.save(booking);
+    const canceledBooking = await this.bookingRepo.save(booking);
 
     await this.bookingRepo.softRemove(booking);
 
-    return deletedBooking;
+    return canceledBooking;
+  }
+
+  private ensureBookingAccess(booking: Booking, user: User): void {
+    if (user.role === UserRole.CLIENT && booking.client.id !== user.id) {
+      throwForbidden('You can only update your own bookings');
+    }
+
+    if (user.role === UserRole.OWNER && booking.table.restaurant.owner.id !== user.id) {
+      throwForbidden('You can only update bookings in your own restaurants');
+    }
   }
 }

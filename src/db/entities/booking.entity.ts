@@ -11,12 +11,7 @@ import {
 } from 'typeorm';
 import { Table } from './table.entity';
 import { User } from './user.entity';
-
-export enum BookingStatus {
-  CONFIRMED = 'confirmed',
-  CANCELED = 'canceled',
-  COMPLETED = 'completed',
-}
+import { BookingStatus } from 'src/enums/bookingStatus.enum';
 
 @Entity({ schema: 'bookings' })
 export class Booking {
