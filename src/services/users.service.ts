@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/db/entities/user.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { CloudinaryService } from './cloudinary.service';
 import { throwBadRequest, throwNotFound } from 'src/utils/exceprions.utils';
 import { UpdateUserDto } from 'src/dto/updateUser.dto';
@@ -23,6 +23,16 @@ export class UsersService {
     if (!user) throwNotFound('User');
 
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { email, deleted_at: IsNull() } });
+  }
+
+  async createUser(data: Partial<User>): Promise<Omit<User, 'password'>> {
+    const user = this.userRepo.create(data);
+    const savedUser = await this.userRepo.save(user);
+    return this.excludePassword(savedUser);
   }
 
   async updateUser(id: number, updates: UpdateUserDto): Promise<Omit<User, 'password'>> {
@@ -63,7 +73,7 @@ export class UsersService {
     return this.excludePassword(user);
   }
 
-  private excludePassword(user: User): Omit<User, 'password'> {
+  excludePassword(user: User): Omit<User, 'password'> {
     const { password, ...userInfo } = user;
 
     return userInfo;

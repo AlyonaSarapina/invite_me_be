@@ -6,54 +6,41 @@ import { RegisterDto } from 'src/dto/register.dto';
 import { IsNull, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from 'src/dto/login.dto';
+import { UsersService } from './users.service';
+import { throwConflict, throwUnauthorized } from 'src/utils/exceprions.utils';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly usersService: UsersService,
     private jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<Omit<User, 'password'>> {
-    const { name, email, password, phone, role } = registerDto;
+    const { email, password } = registerDto;
 
-    const userExists = await this.userRepository.findOne({ where: { email, deleted_at: IsNull() } });
-    if (userExists) {
-      throw new ConflictException('Email is already registered');
-    }
+    const existingUser = await this.usersService.getUserByEmail(email);
+    if (existingUser) throwConflict('Email is already registered');
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = this.userRepository.create({
-      name,
-      email,
+    const newUser = await this.usersService.createUser({
+      ...registerDto,
       password: hashedPassword,
-      phone,
-      role,
     });
 
-    await this.userRepository.save(user);
-
-    const { password: _, ...userInfo } = user;
-
-    return userInfo;
+    return newUser;
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
     const { email, password } = loginDto;
 
-    const user = await this.userRepository.findOne({ where: { email, deleted_at: IsNull() } });
+    const user = await this.usersService.getUserByEmail(email);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid email');
-    }
+    if (!user) throwUnauthorized('Invalid email');
 
     const isValidPassword = await bcrypt.compare(password, user.password);
 
-    if (!isValidPassword) {
-      throw new UnauthorizedException('Invalid password');
-    }
+    if (!isValidPassword) throwUnauthorized('Invalid password');
 
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);

@@ -4,8 +4,10 @@ import { User } from 'src/db/entities/user.entity';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { CreateBookingDto } from 'src/dto/createBooking.dto';
 import { UpdateBookingStatusDto } from 'src/dto/updateBooking.dto';
+import { UserRole } from 'src/enums/userRole.enum';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { BookingsService } from 'src/services/bookings.service';
+import { throwForbidden } from 'src/utils/exceprions.utils';
 
 @Controller('bookings')
 export class BookingsController {
@@ -14,7 +16,14 @@ export class BookingsController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getAll(@CurrentUser() user: User): Promise<Booking[]> {
-    return this.bookingsService.getAllBookings(user);
+    const { role, id } = user;
+    if (role === UserRole.CLIENT) {
+      return this.bookingsService.getClientsBookings(id);
+    } else if (role === UserRole.OWNER) {
+      return this.bookingsService.getOwnersBookings(id);
+    } else {
+      throwForbidden('Invalid role');
+    }
   }
 
   @UseGuards(JwtAuthGuard)

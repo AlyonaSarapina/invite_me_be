@@ -25,33 +25,29 @@ export class BookingsService {
     private readonly tableService: TablesService,
   ) {}
 
-  async getAllBookings(user: User): Promise<Booking[]> {
-    if (user.role === UserRole.CLIENT) {
-      return this.bookingRepo.find({
-        where: { client: { id: user.id }, deleted_at: IsNull() },
-        relations: ['table', 'client'],
-      });
-    }
+  async getClientsBookings(userId: number): Promise<Booking[]> {
+    return this.bookingRepo.find({
+      where: { client: { id: userId }, deleted_at: IsNull() },
+      relations: ['table', 'client'],
+    });
+  }
 
-    if (user.role === UserRole.OWNER) {
-      const ownerRestaurants = await this.restaurantService.getOwnedRestaurants(user.id);
+  async getOwnersBookings(userId: number): Promise<Booking[]> {
+    const ownerRestaurants = await this.restaurantService.getOwnedRestaurants(userId);
 
-      const tableIds = ownerRestaurants
-        .flatMap((restaurant: Restaurant) => restaurant.tables)
-        .map((table: Table) => table.id);
+    const tableIds = ownerRestaurants
+      .flatMap((restaurant: Restaurant) => restaurant.tables)
+      .map((table: Table) => table.id);
 
-      if (!tableIds.length) return [];
+    if (!tableIds.length) return [];
 
-      return this.bookingRepo.find({
-        where: {
-          table: In(tableIds),
-          deleted_at: IsNull(),
-        },
-        relations: ['table', 'client'],
-      });
-    }
-
-    throwForbidden('Invalid role');
+    return this.bookingRepo.find({
+      where: {
+        table: In(tableIds),
+        deleted_at: IsNull(),
+      },
+      relations: ['table', 'client'],
+    });
   }
 
   async createBooking(restaurantId: number, createBookingDto: CreateBookingDto, user: User): Promise<Booking> {
