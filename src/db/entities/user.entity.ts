@@ -8,10 +8,9 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Restaurant } from './Restaurant';
-import { Booking } from './Booking';
-
-export type UserRoleType = 'client' | 'owner';
+import { Restaurant } from './restaurant.entity';
+import { Booking } from './booking.entity';
+import { UserRole } from 'src/enums/userRole.enum';
 
 @Entity({ schema: 'users' })
 export class User {
@@ -37,16 +36,16 @@ export class User {
   @Column({ nullable: true })
   profile_pic_url: string;
 
-  @Column({ type: 'enum', enum: ['client', 'owner'] })
-  role: UserRoleType;
+  @Column({ type: 'enum', enum: UserRole })
+  role: UserRole;
 
-  @CreateDateColumn({ type: 'time with time zone' })
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'time with time zone' })
+  @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn({ type: 'time with time zone', nullable: true })
+  @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
