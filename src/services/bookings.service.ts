@@ -8,7 +8,7 @@ import { CreateBookingDto } from 'src/dto/createBooking.dto';
 import { In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { TablesService } from './tables.service';
 import { RestaurantsService } from './restaurants.service';
-import { throwForbidden, throwNotFound } from 'src/utils/exceprions.utils';
+import { throwConflict, throwForbidden, throwNotFound } from 'src/utils/exceprions.utils';
 import { UsersService } from './users.service';
 import { UserRole } from 'src/enums/userRole.enum';
 import { BookingStatus } from 'src/enums/bookingStatus.enum';
@@ -56,11 +56,8 @@ export class BookingsService {
     const end_date = new Date(end_time);
     const isOwner = user.role === UserRole.OWNER;
 
-    if (isOwner && !clientPhoneNumber) {
-      throw new ConflictException(
-        'You need to provide the client contact information (phone number) to create the booking',
-      );
-    }
+    if (isOwner && !clientPhoneNumber)
+      throwConflict('You need to provide the client contact information (phone number) to create the booking');
 
     const client = isOwner ? await this.userService.getUserByPhone(clientPhoneNumber) : user;
 
@@ -150,9 +147,7 @@ export class BookingsService {
         booking.id,
       );
 
-      if (!availableTable) {
-        throw new ConflictException('No available tables for the updated time and group size');
-      }
+      if (!availableTable) throwConflict('No available tables for the updated time and group size');
 
       booking.table = availableTable;
       booking.start_time = new_start_time;

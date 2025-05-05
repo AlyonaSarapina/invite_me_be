@@ -8,6 +8,7 @@ import { IsNull, Repository } from 'typeorm';
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthConfig } from 'src/config/auth.config';
+import { throwUnauthorized } from 'src/utils/exceprions.utils';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -34,9 +35,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         deleted_at: IsNull(),
       },
     });
-    if (!user) {
-      throw new UnauthorizedException('Invalid token');
-    }
+
+    if (!user) throwUnauthorized('Invalid token');
+
     return user;
   }
 }
