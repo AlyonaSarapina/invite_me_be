@@ -19,7 +19,7 @@ export class GetRestaurantsQueryDto {
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  is_pet_friedly?: boolean;
+  is_pet_friendly?: boolean;
 
   @IsOptional()
   @Type(() => Number)
